@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.ProductTypeMapper">
+    <!--全部属性映射-->
+    <resultMap id="productTypeResultMap" type="com.entity.ProductType">
+      <id column="id" jdbcType="INTEGER" property="id" />
+      <result column="name" jdbcType="VARCHAR" property="name" />
+      <result column="father_id" jdbcType="INTEGER" property="fatherId" />
+    </resultMap>
+    <!--一级分类映射-->
+    <resultMap id="FirstTypeResultMap" type="java.util.HashMap">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="father_id" jdbcType="INTEGER" property="fatherId" />
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+      delete from product_type
+      where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.entity.ProductType">
+      insert into product_type (id, name, father_id
+        )
+      values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{fatherId,jdbcType=INTEGER}
+        )
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="com.entity.ProductType">
+      update product_type
+      set name = #{name,jdbcType=VARCHAR},
+        father_id = #{fatherId,jdbcType=INTEGER}
+      where id = #{id,jdbcType=INTEGER}
+    </update>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="productTypeResultMap">
+      select id, name, father_id
+      from product_type
+      where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectAll" resultMap="productTypeResultMap">
+      select id, name, father_id
+      from product_type
+    </select>
+    <!--查询一级商品类型-->
+    <select id="selectFirstProductType" parameterType="java.lang.Integer" resultMap="FirstTypeResultMap">
+      select id,name from product_type where father_id is null
+        <if test="limitNum != null">
+            limit ${limitNum}
+        </if>
+    </select>
+    <!--子类型结果映射-->
+    <resultMap id="SelectChildrenTypeMap" type="java.util.HashMap">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+    </resultMap>
+    <!--查询子类型-->
+    <select id="selectChildrenType" resultMap="FirstTypeResultMap">
+        select id , name from product_type
+        where
+            father_id in
+            (select distinct father_id from product_type
+            where id in
+            <foreach collection="fatherIds" open="(" close=")" item="fatherId" separator=",">
+                #{fatherId}
+            </foreach>and father_id is not
+            null
+            or father_id in
+            <foreach collection="fatherIds" open="(" close=")" item="fatherId" separator=",">
+                #{fatherId}
+            </foreach>
+            )
+    </select>
+</mapper>

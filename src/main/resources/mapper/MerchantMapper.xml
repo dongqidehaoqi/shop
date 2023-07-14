@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.MerchantMapper">
+  <resultMap id="MerchantResultMap" type="com.entity.Merchant">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="head_protrait" jdbcType="VARCHAR" property="headProtrait" />
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName" />
+    <result column="owner_name" jdbcType="VARCHAR" property="ownerName" />
+    <result column="create_time" jdbcType="DATE" property="createTime" />
+    <result column="goods_grade" jdbcType="TINYINT" property="goodsGrade" />
+    <result column="service_grade" jdbcType="TINYINT" property="serviceGrade" />
+    <result column="logistics_grade" jdbcType="TINYINT" property="logisticsGrade" />
+    <result column="fans_num" jdbcType="INTEGER" property="fansNum" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from merchant
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.Merchant">
+    insert into merchant (id, head_protrait, shop_name,
+      owner_name, create_time, goods_grade,
+      service_grade, logistics_grade, fans_num,
+      status)
+    values (#{id,jdbcType=INTEGER}, #{headProtrait,jdbcType=VARCHAR}, #{shopName,jdbcType=VARCHAR},
+      #{ownerName,jdbcType=VARCHAR}, #{createTime,jdbcType=DATE}, #{goodsGrade,jdbcType=TINYINT},
+      #{serviceGrade,jdbcType=TINYINT}, #{logisticsGrade,jdbcType=TINYINT}, #{fansNum,jdbcType=INTEGER},
+      #{status,jdbcType=TINYINT})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Merchant">
+    update merchant
+    set head_protrait = #{headProtrait,jdbcType=VARCHAR},
+      shop_name = #{shopName,jdbcType=VARCHAR},
+      owner_name = #{ownerName,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=DATE},
+      goods_grade = #{goodsGrade,jdbcType=TINYINT},
+      service_grade = #{serviceGrade,jdbcType=TINYINT},
+      logistics_grade = #{logisticsGrade,jdbcType=TINYINT},
+      fans_num = #{fansNum,jdbcType=INTEGER},
+      status = #{status,jdbcType=TINYINT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="MerchantResultMap">
+    select id, head_protrait, shop_name, owner_name, create_time, goods_grade, service_grade,
+    logistics_grade, fans_num, status
+    from merchant
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="MerchantResultMap">
+    select id, head_protrait, shop_name, owner_name, create_time, goods_grade, service_grade,
+    logistics_grade, fans_num, status
+    from merchant
+  </select>
+  <!--商品详情中的商家信息结果映射-->
+  <resultMap id="SelectMerWithPdtDetailResultMap" type="com.entity.Merchant">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="head_protrait" jdbcType="VARCHAR" property="headProtrait" />
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName" />
+    <result column="goods_grade" jdbcType="TINYINT" property="goodsGrade" />
+    <result column="service_grade" jdbcType="TINYINT" property="serviceGrade" />
+    <result column="logistics_grade" jdbcType="TINYINT" property="logisticsGrade" />
+  </resultMap>
+  <!--商品详情中的商家信息-->
+  <select id="selectMerWithPdtDetail" resultMap="SelectMerWithPdtDetailResultMap">
+    select id, shop_name, head_protrait, goods_grade, service_grade, logistics_grade
+    from merchant
+    where id = (select merchant_id from product where id = #{productId});
+  </select>
+  <!--商品相关商家结果映射-->
+  <resultMap id="SelectAboutMerchantMap" type="java.util.HashMap">
+    <id column="merchant_id" jdbcType="INTEGER" property="merchantId"/>
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName"/>
+  </resultMap>
+  <!--商品相关商家-->
+  <select id="selectAboutMerchant" resultMap="SelectAboutMerchantMap">
+    select distinct merchant_id,merchant.shop_name
+    from product
+    join merchant
+    on merchant_id = merchant.id
+    where product.id
+              in (select product_id from product_type_relation where type_id
+                    in (select id from product_type where father_id
+                        in (select distinct father_id from product_type where id in
+                              <foreach collection="fatherIds" separator="," open="(" close=")" item="fatherId">
+                                #{fatherId}
+                              </foreach>
+                            and father_id is not null
+                            or father_id in
+                               <foreach collection="fatherIds" separator="," open="(" close=")" item="fatherId">
+                                 #{fatherId}
+                               </foreach>
+                            )
+                        )
+                  )
+  </select>
+
+</mapper>

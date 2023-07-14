@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.BrowsingHistoryMapper">
+  <resultMap id="BrowsingHistoryResultMap" type="com.entity.BrowsingHistory">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="time" jdbcType="DATE" property="time" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from browsing_history
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <!--彻底删除-->
+  <delete id="deleteHistory">
+    delete from browsing_history
+    where user_id = #{userId} and product_id = #{productId}
+  </delete>
+  <insert id="insert" parameterType="com.entity.BrowsingHistory">
+    insert into browsing_history (id, time, status,
+      product_id, user_id)
+    values (#{id,jdbcType=INTEGER}, #{time,jdbcType=DATE}, #{status,jdbcType=TINYINT},
+      #{productId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER})
+  </insert>
+  <!--添加浏览记录-->
+  <insert id="insertHistory">
+    insert into browsing_history (product_id, time, user_id)
+    values (#{productId}, #{time},  #{userId})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.BrowsingHistory">
+    update browsing_history
+    set time = #{time,jdbcType=DATE},
+      status = #{status,jdbcType=TINYINT},
+      product_id = #{productId,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <!--删除历史记录-->
+  <update id="updateHistoryStatus">
+    update browsing_history set status = 0 where user_id = #{userId} and product_id = #{productId}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BrowsingHistoryResultMap">
+    select id, time, status, product_id, user_id
+    from browsing_history
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BrowsingHistoryResultMap">
+    select id, time, status, product_id, user_id
+    from browsing_history
+  </select>
+  <resultMap id="SelectHistoryResultMap" type="java.util.HashMap">
+    <id column="time" jdbcType="DATE" property="time"/>
+    <result column="productId" jdbcType="INTEGER" property="productId"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+    <result column="pictureName" jdbcType="VARCHAR" property="pictureName"/>
+    <result column="pictureId" jdbcType="INTEGER" property="pictureId"/>
+  </resultMap>
+  <!--浏览历史记录-->
+  <select id="selectHistory" resultMap="SelectHistoryResultMap">
+    select bh.time ,pdt.id as productId, pdt.detail_info, pdt.market_price, pdt.preferential_price,
+           pct.`name` as pictureName,pct.id as pictureId
+    from
+         browsing_history as bh, product as pdt , picture as pct
+    where
+        bh.product_id = pdt.id and pdt.id = pct.product_id and bh.status = 1
+        and pct.type_id = 2 and bh.user_id = #{userId} order by bh.time desc
+  </select>
+  <!--查询历史记录数-->
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(*) from browsing_history where user_id = #{userId}
+  </select>
+
+</mapper>

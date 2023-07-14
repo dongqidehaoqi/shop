@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.ProductMapper">
+  <resultMap id="ProductResultMap" type="com.entity.Product">
+    <id column="id" jdbcType="INTEGER" property="productId" />
+    <id column="modify_time" jdbcType="TIMESTAMP" property="modifyTime" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo" />
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice" />
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice" />
+    <result column="discount" jdbcType="DOUBLE" property="discount" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="sale_num" jdbcType="INTEGER" property="saleNum" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="inventory_num" jdbcType="INTEGER" property="inventoryNum" />
+    <result column="come_time" jdbcType="TIMESTAMP" property="comeTime" />
+    <result column="warn_num" jdbcType="INTEGER" property="warnNum" />
+    <result column="merchant_id" jdbcType="INTEGER" property="merchantId" />
+  </resultMap>
+  <!--猜你喜欢结果映射-->
+  <resultMap id="GuessYourLoveMap" type="java.util.HashMap">
+    <id column="id" jdbcType="INTEGER" property="productId" />
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo" />
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice" />
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice" />
+    <result column="picture_id" jdbcType="INTEGER" property="pictureId" />
+    <result column="picture_name" jdbcType="VARCHAR" property="pictureName" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from product
+    where id = #{id,jdbcType=INTEGER}
+      and modify_time = #{modifyTime,jdbcType=TIMESTAMP}
+  </delete>
+  <insert id="insert" parameterType="com.entity.Product">
+    insert into product (id, modify_time, name,
+      detail_info, market_price, preferential_price,
+      discount, address, sale_num,
+      status, inventory_num, come_time,
+      warn_num, merchant_id)
+    values (#{id,jdbcType=INTEGER}, #{modifyTime,jdbcType=TIMESTAMP}, #{name,jdbcType=VARCHAR},
+      #{detailInfo,jdbcType=VARCHAR}, #{marketPrice,jdbcType=DECIMAL}, #{preferentialPrice,jdbcType=DECIMAL},
+      #{discount,jdbcType=DOUBLE}, #{address,jdbcType=VARCHAR}, #{saleNum,jdbcType=INTEGER},
+      #{status,jdbcType=TINYINT}, #{inventoryNum,jdbcType=INTEGER}, #{comeTime,jdbcType=TIMESTAMP},
+      #{warnNum,jdbcType=INTEGER}, #{merchantId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Product">
+    update product
+    set name = #{name,jdbcType=VARCHAR},
+      detail_info = #{detailInfo,jdbcType=VARCHAR},
+      market_price = #{marketPrice,jdbcType=DECIMAL},
+      preferential_price = #{preferentialPrice,jdbcType=DECIMAL},
+      discount = #{discount,jdbcType=DOUBLE},
+      address = #{address,jdbcType=VARCHAR},
+      sale_num = #{saleNum,jdbcType=INTEGER},
+      status = #{status,jdbcType=TINYINT},
+      inventory_num = #{inventoryNum,jdbcType=INTEGER},
+      come_time = #{comeTime,jdbcType=TIMESTAMP},
+      warn_num = #{warnNum,jdbcType=INTEGER},
+      merchant_id = #{merchantId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+      and modify_time = #{modifyTime,jdbcType=TIMESTAMP}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="ProductResultMap">
+    select id, modify_time, name, detail_info, market_price, preferential_price, discount,
+    address, sale_num, status, inventory_num, come_time, warn_num, merchant_id
+    from product
+    where id = #{id,jdbcType=INTEGER}
+      and modify_time = #{modifyTime,jdbcType=TIMESTAMP}
+  </select>
+  <select id="selectAll" resultMap="ProductResultMap">
+    select id, modify_time, name, detail_info, market_price, preferential_price, discount,
+    address, sale_num, status, inventory_num, come_time, warn_num, merchant_id
+    from product
+  </select>
+  <!--首页展示-->
+  <select id="selectHomePage" resultMap="GuessYourLoveMap">
+    select distinct pdt.id ,pdt.detail_info,pdt.market_price,pdt.preferential_price, pct.id as picture_id, pct.name as picture_name
+    from product pdt
+        join picture pct
+        on pdt.id = pct.product_id and pct.type_id = 2 and pct.is_notice = 0 and pdt.status = 1
+        limit #{startLine},#{needNum}
+  </select>
+  <!--猜你喜欢-->
+  <select id="selectByPersonalLove"  resultMap="GuessYourLoveMap">
+    select distinct pdt.id ,pdt.detail_info,pdt.market_price,pdt.preferential_price,
+           pct.id as picture_id, pct.name as picture_name
+    from product pdt
+    join picture pct
+    on pdt.id = pct.product_id
+    where pdt.id
+    in
+        (select distinct product_id from product_type_relation
+         where type_id
+         in
+            (select type_id from product_type_relation
+             where product_id in
+                   (select a.product_id
+                    from
+                    (select count(product_id) num ,product_id ,user_id
+                     from browsing_history
+                     GROUP BY product_id ,user_id
+                     having user_id = #{userId}
+                     order by num desc limit 5
+                    )as a
+                   )
+            )
+        )
+    and pct.type_id = 2 and pct.is_notice = 0 and pdt.status = 1
+    limit #{startLine},#{needNum}
+  </select>
+  <!--关键词查询结果映射-->
+  <resultMap id="SelectByKeywordResultMap" type="java.util.HashMap">
+    <id column="pdtID" jdbcType="INTEGER" property="pdtId"/>
+    <result column="type_id" jdbcType="INTEGER" property="typeId"/>
+  </resultMap>
+  <!--关键词查询-->
+  <select id="selectByKeyword" resultMap="SelectByKeywordResultMap">
+    select
+        ptr.type_id, p.id as pdtID
+    from
+        product p
+    join
+        product_type_relation ptr
+    on
+        p.id = ptr.product_id
+    where
+        p.name like concat('%',#{keyword},'%') or p.detail_info like concat('%',#{keyword},'%');
+  </select>
+  <!--商品详情结果映射-->
+  <resultMap id="SelectDetailResultMap" type="java.util.HashMap">
+    <id column="id" jdbcType="INTEGER" property="productId"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+    <result column="discount" jdbcType="DECIMAL" property="discount"/>
+    <result column="address" jdbcType="VARCHAR" property="address"/>
+    <result column="sale_num" jdbcType="VARCHAR" property="saleNum"/>
+    <result column="inventory_num" jdbcType="INTEGER" property="inventoryNum"/>
+  </resultMap>
+  <!--商品详情-->
+  <select id="selectDetail" resultMap="SelectDetailResultMap">
+    select id, detail_info,market_price,preferential_price,discount,address, sale_num, inventory_num
+    from product
+    where id = #{productId};
+  </select>
+  <!--商品列表结果映射-->
+  <resultMap id="SelectProductListMap" type="java.util.HashMap">
+    <id column="pdtID" jdbcType="INTEGER" property="productId"/>
+    <result column="name" jdbcType="VARCHAR" property="pictureName"/>
+    <result column="pctID" jdbcType="INTEGER" property="pictureId"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+    <result column="merchant_id" jdbcType="INTEGER" property="merchantId"/>
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName"/>
+    <result column="sale_num" jdbcType="VARCHAR" property="saleNum"/>
+    <result column="address" jdbcType="VARCHAR" property="address"/>
+  </resultMap>
+  <!--商品列表-->
+  <select id="selectProductList" resultMap="SelectProductListMap">
+    select pct.id as pctID, pct.name, pdt.id as pdtID, pdt.detail_info, market_price,
+           preferential_price, pdt.merchant_id, shop_name, sale_num, address
+    from picture as pct,product as pdt,merchant as mer
+    where pct.product_id = pdt.id and pdt.merchant_id = mer.id
+      and pdt.id in (select distinct product_id from product_type_relation where type_id in
+                    <foreach collection="fatherIds" item="fatherId" open="(" close=")" separator=",">
+                      #{fatherId}
+                    </foreach>
+                    )
+      and pct.type_id = 2
+    <if test="priceFloor != null and priceFloor != ''">
+      and preferential_price &gt;= #{priceFloor}
+    </if>
+    <if test="priceUpper != null and priceUpper != ''">
+      and preferential_price &lt;= #{priceUpper}
+    </if>
+    <if test="merchantId != null and merchantId != ''">
+      and pdt.merchant_id = #{merchantId}
+    </if>
+  </select>
+  <!--所选类型下销量前十的商品结果映射-->
+  <resultMap id="SelectHotSaleMap" type="java.util.HashMap">
+    <id column="pdtID" jdbcType="INTEGER" property="productId"/>
+    <result column="pctID" jdbcType="INTEGER" property="pictureId"/>
+    <result column="name" jdbcType="VARCHAR" property="pictureName"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+    <result column="sale_num" jdbcType="INTEGER" property="saleNum"/>
+  </resultMap>
+  <!--所选类型下销量前十的商品-->
+  <select id="selectHotSale" resultMap="SelectHotSaleMap">
+    select pdt.id as pdtID, pct.id as pctID, pct.name, pdt.detail_info, pdt.market_price ,
+           pdt.preferential_price ,pdt.sale_num
+    from picture pct,product pdt
+    where pct.product_id = pdt.id and pdt.id in (select distinct product_id from product_type_relation
+                                                where type_id in
+                                                <foreach collection="fatherIds" item="fatherId" open="(" close=")" separator=",">
+                                                  #{fatherId}
+                                                </foreach>
+                                                )
+      and pct.type_id = 2
+      and pct.is_notice = 0 order by sale_num desc limit 10
+  </select>
+
+
+</mapper>

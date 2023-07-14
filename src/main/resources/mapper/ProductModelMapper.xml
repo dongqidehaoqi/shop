@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.ProductModelMapper">
+  <resultMap id="ProductModelResultMap" type="com.entity.ProductModel">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from product_model
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.ProductModel">
+    insert into product_model (id, content, product_id
+      )
+    values (#{id,jdbcType=INTEGER}, #{content,jdbcType=VARCHAR}, #{productId,jdbcType=INTEGER}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.ProductModel">
+    update product_model
+    set content = #{content,jdbcType=VARCHAR},
+      product_id = #{productId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ProductModelResultMap">
+    select id, content, product_id
+    from product_model
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="ProductModelResultMap">
+    select id, content, product_id
+    from product_model
+  </select>
+  <!--商品型号结果映射-->
+  <resultMap id="SelectModelResultMap" type="java.util.HashMap">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="content" jdbcType="VARCHAR" property="content"/>
+  </resultMap>
+  <!--商品型号-->
+  <select id="selectModel" resultMap="SelectModelResultMap">
+    select id,content from product_model where product_id = #{productId};
+  </select>
+
+
+</mapper>

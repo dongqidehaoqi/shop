@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.entity.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="realname" jdbcType="VARCHAR" property="realname" />
+    <result column="sex" jdbcType="TINYINT" property="sex" />
+    <result column="head_portrait" jdbcType="VARCHAR" property="headPortrait" />
+    <result column="phone_num" jdbcType="CHAR" property="phoneNum" />
+    <result column="mailbox" jdbcType="VARCHAR" property="mailbox" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="balance" jdbcType="DECIMAL" property="balance" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+  </resultMap>
+  <!--头像昵称映射-->
+  <resultMap id="SimpleInfoMap" type="java.util.HashMap">
+    <result column="head_portrait" jdbcType="VARCHAR" property="headPortrait"/>
+    <result column="username" jdbcType="VARCHAR" property="username"/>
+  </resultMap>
+  <!--登录结果映射-->
+  <resultMap id="IdMap" type="java.util.HashMap">
+    <result column="id" jdbcType="INTEGER" property="id"/>
+    <result column="password" jdbcType="VARCHAR" property="password"/>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from user_info
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.User">
+    insert into user_info (id, username, realname,
+      sex, head_portrait, phone_num,
+      mailbox, password, balance,
+      create_time, status)
+    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{realname,jdbcType=VARCHAR},
+      #{sex,jdbcType=TINYINT}, #{headPortrait,jdbcType=VARCHAR}, #{phoneNum,jdbcType=CHAR},
+      #{mailbox,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{balance,jdbcType=DECIMAL},
+      #{createTime,jdbcType=TIMESTAMP}, #{status,jdbcType=TINYINT})
+  </insert>
+  <!--注册用户-->
+  <insert id="insertByBatch" parameterType="com.entity.User">
+    insert into user_info(username,realname,sex,mailbox,password,phone_num,head_portrait)
+    values(#{user.username},#{user.realname},#{user.sex},#{user.mailbox},#{user.password},#{user.phoneNum},#{user.headPortrait})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.User">
+    update user_info
+    set username = #{username,jdbcType=VARCHAR},
+      realname = #{realname,jdbcType=VARCHAR},
+      sex = #{sex,jdbcType=TINYINT},
+      head_portrait = #{headPortrait,jdbcType=VARCHAR},
+      phone_num = #{phoneNum,jdbcType=CHAR},
+      mailbox = #{mailbox,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      balance = #{balance,jdbcType=DECIMAL},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=TINYINT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <!--更新用户信息-->
+  <update id="updateInfo">
+    update user_info set
+    <if test="username != null and username != ''">
+      username = #{username},
+    </if>
+    <if test="headPortrait != null and headPortrait != ''">
+      head_portrait = #{headPortrait},
+    </if>
+    <if test="sex != null and sex != ''">
+      sex = #{sex},
+    </if>
+    status = 1
+    where id = #{userId}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, username, realname, sex, head_portrait, phone_num, mailbox, password,
+    balance, create_time, status
+    from user_info
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, username, realname, sex, head_portrait, phone_num, mailbox, password,
+    balance, create_time, status
+    from user_info
+  </select>
+  <!--展示首页用户头像昵称-->
+  <select id="selectSimpleInfo" resultMap="SimpleInfoMap">
+    select head_portrait,username from user_info where id = #{userId};
+  </select>
+  <!--登录时，邮箱查密码-->
+  <select id="selectByEmail" resultMap="IdMap">
+    select id,password from user_info where mailbox = #{mailbox}
+  </select>
+  <!--检查昵称、手机号、邮箱的唯一性-->
+  <select id="selectByBatch" resultType="java.lang.Integer">
+    select  count(id) from user_info
+    <where>
+        <if test="username != null and username != ''">
+          and username = #{username}
+        </if>
+        <if test="phone != null and phone != ''">
+          and phone_num = #{phone}
+        </if>
+        <if test="email != null and email != ''">
+          and mailbox = #{email}
+        </if>
+    </where>
+  </select>
+  <!--头像 昵称 性别映射-->
+  <resultMap id="SelectSomeMap" type="java.util.HashMap">
+    <result column="username" jdbcType="VARCHAR" property="username"/>
+    <result column="head_portrait" jdbcType="VARCHAR" property="headPortrait"/>
+    <result column="sex" jdbcType="TINYINT" property="sex"/>
+  </resultMap>
+  <!--查询头像 昵称 性别-->
+  <select id="selectSome" resultMap="SelectSomeMap">
+    select username, head_portrait, sex from user_info where id = #{userId}
+  </select>
+
+</mapper>

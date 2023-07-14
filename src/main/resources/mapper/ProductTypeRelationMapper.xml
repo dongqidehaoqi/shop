@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.ProductTypeRelationMapper">
+  <resultMap id="ProductTypeRelationResultMap" type="com.entity.ProductTypeRelation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+    <result column="type_id" jdbcType="INTEGER" property="typeId" />
+  </resultMap>
+  <resultMap id="SelectByKeyword" type="java.util.HashMap">
+    <id column="pdtID" jdbcType="INTEGER" property="productId" />
+    <result column="type_id" jdbcType="INTEGER" property="productTypeId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from product_type_relation
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.ProductTypeRelation">
+    insert into product_type_relation (id, product_id, type_id
+      )
+    values (#{id,jdbcType=INTEGER}, #{productId,jdbcType=INTEGER}, #{typeId,jdbcType=INTEGER}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.ProductTypeRelation">
+    update product_type_relation
+    set product_id = #{productId,jdbcType=INTEGER},
+      type_id = #{typeId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ProductTypeRelationResultMap">
+    select id, product_id, type_id
+    from product_type_relation
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="ProductTypeRelationResultMap">
+    select id, product_id, type_id
+    from product_type_relation
+  </select>
+  <!--根据输入框关键字查询-->
+  <select id="selectByKeyword" parameterType="java.lang.String" resultMap="SelectByKeyword">
+    select p.id as pdtID,ptr.type_id
+    from product p
+    join product_type_relation ptr
+    on p.id = ptr.product_id where p.name
+    like concat('%',#{keyword},'%') or p.detail_info like concat('%',#{keyword},'%')
+  </select>
+
+</mapper>

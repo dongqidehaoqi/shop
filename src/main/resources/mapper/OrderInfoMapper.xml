@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.OrderInfoMapper">
+  <resultMap id="OrderInfoResultMap" type="com.entity.OrderInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="order_num" jdbcType="VARCHAR" property="orderNum" />
+    <result column="order_time" jdbcType="TIMESTAMP" property="orderTime" />
+    <result column="pay_method" jdbcType="TINYINT" property="payMethod" />
+    <result column="pay_money" jdbcType="DECIMAL" property="payMoney" />
+    <result column="pay_time" jdbcType="TIMESTAMP" property="payTime" />
+    <result column="order_status" jdbcType="TINYINT" property="orderStatus" />
+    <result column="shipping_method" jdbcType="TINYINT" property="shippingMethod" />
+    <result column="logistics_status" jdbcType="TINYINT" property="logisticsStatus" />
+    <result column="waybill_num" jdbcType="VARCHAR" property="waybillNum" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="address_id" jdbcType="INTEGER" property="addressId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from order_info
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.OrderInfo">
+    insert into order_info (id, order_num, order_time,
+      pay_method, pay_money, pay_time,
+      order_status, shipping_method, logistics_status,
+      waybill_num, status, address_id,
+      user_id)
+    values (#{id,jdbcType=INTEGER}, #{orderNum,jdbcType=VARCHAR}, #{orderTime,jdbcType=TIMESTAMP},
+      #{payMethod,jdbcType=TINYINT}, #{payMoney,jdbcType=DECIMAL}, #{payTime,jdbcType=TIMESTAMP},
+      #{orderStatus,jdbcType=TINYINT}, #{shippingMethod,jdbcType=TINYINT}, #{logisticsStatus,jdbcType=TINYINT},
+      #{waybillNum,jdbcType=VARCHAR}, #{status,jdbcType=TINYINT}, #{addressId,jdbcType=INTEGER},
+      #{userId,jdbcType=INTEGER})
+  </insert>
+  <!--插入订单-->
+  <insert id="insertOrder" parameterType="com.entity.OrderInfo">
+    insert into order_info
+        (id,order_num,order_time,pay_method,pay_money,pay_time,order_status,shipping_method,logistics_status,waybill_num,address_id,user_id)
+    values (#{id,jdbcType=INTEGER},#{orderNum,jdbcType=VARCHAR}, #{orderTime,jdbcType=TIMESTAMP},
+            #{payMethod,jdbcType=TINYINT}, #{payMoney,jdbcType=DECIMAL}, #{payTime,jdbcType=TIMESTAMP},
+            #{orderStatus,jdbcType=TINYINT}, #{shippingMethod,jdbcType=TINYINT}, #{logisticsStatus,jdbcType=TINYINT},
+            #{waybillNum,jdbcType=VARCHAR}, #{addressId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.OrderInfo">
+    update order_info
+    set order_num = #{orderNum,jdbcType=VARCHAR},
+      order_time = #{orderTime,jdbcType=TIMESTAMP},
+      pay_method = #{payMethod,jdbcType=TINYINT},
+      pay_money = #{payMoney,jdbcType=DECIMAL},
+      pay_time = #{payTime,jdbcType=TIMESTAMP},
+      order_status = #{orderStatus,jdbcType=TINYINT},
+      shipping_method = #{shippingMethod,jdbcType=TINYINT},
+      logistics_status = #{logisticsStatus,jdbcType=TINYINT},
+      waybill_num = #{waybillNum,jdbcType=VARCHAR},
+      status = #{status,jdbcType=TINYINT},
+      address_id = #{addressId,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="OrderInfoResultMap">
+    select id, order_num, order_time, pay_method, pay_money, pay_time, order_status,
+    shipping_method, logistics_status, waybill_num, status, address_id, user_id
+    from order_info
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="OrderInfoResultMap">
+    select id, order_num, order_time, pay_method, pay_money, pay_time, order_status,
+    shipping_method, logistics_status, waybill_num, status, address_id, user_id
+    from order_info
+  </select>
+  <!--待收货商品数量-->
+  <select id="selectWaitReceiveNUm" resultType="java.lang.Integer">
+    select count(*) as waitReceiveNum
+    from order_info
+    where user_id = #{userId} and logistics_status in (1,2)
+  </select>
+  <!--待发货商品数量-->
+  <select id="selectWaitSendNum" resultType="java.lang.Integer">
+    select count(*) as waitSendNum
+    from order_info
+    where user_id = #{userId} and logistics_status = 0 and order_status = 1
+  </select>
+  <!--待付款商品数量-->
+  <select id="selectWaitPayNum" resultType="java.lang.Integer">
+    select count(*) as waitPayNum
+    from order_info
+    where user_id = #{userId} and order_status = 0
+  </select>
+  <!--查询待评价商品数量-->
+  <select id="selectWaitCommentNum" resultType="java.lang.Integer">
+    select (productNum - commentNum) as waitCommentNum
+    from
+        (
+            select distinct count(distinct product_id,product_id) as productNum,user_id
+            from order_info as o
+            join order_product_relation as opr on o.id = opr.order_id where o.user_id = #{userId} and o.logistics_status = 4
+        ) as a
+        join
+        (
+            select  count(distinct product_id,product_id) as commentNum,user_id
+            from `comment`
+            where user_id = #{userId}
+        ) as b on a.user_id = b.user_id;
+  </select>
+  <resultMap id="selectOfUserResultMap" type="java.util.HashMap">
+    <id column="orderId" jdbcType="INTEGER" property="orderId" />
+    <result column="logistics_status" jdbcType="INTEGER" property="logisticsStatus" />
+    <result column="order_num" jdbcType="VARCHAR" property="orderNum" />
+    <result column="order_time" jdbcType="DATE" property="orderTime" />
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName" />
+    <result column="pictureId" jdbcType="INTEGER" property="pictureId" />
+    <result column="pictureName" jdbcType="VARCHAR" property="pictureName" />
+    <result column="productId" jdbcType="INTEGER" property="productId" />
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo" />
+    <result column="model" jdbcType="VARCHAR" property="model" />
+    <result column="discountPrice" jdbcType="DECIMAL" property="discountPrice" />
+    <result column="pay_money" jdbcType="DECIMAL" property="payMoney" />
+    <result column="product_num" jdbcType="INTEGER" property="productNum" />
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice" />
+  </resultMap>
+  <!--查询各种状态的订单-->
+  <select id="selectOfUser" resultMap="selectOfUserResultMap">
+    select DISTINCT
+                    odr.logistics_status, odr.id as orderId, odr.order_num, odr.order_time, merchant.shop_name,
+                    pct.id as pictureId, pct.`name` as pictureName, pdt.id as productId, pdt.detail_info,opr.model,
+                    opr.price as discountPrice, odr.pay_money, opr.product_num,pdt.market_price
+    from order_info odr,order_product_relation opr,product pdt ,picture pct, merchant
+    where odr.id = opr.order_id
+      and opr.product_id = pdt.id
+      and pdt.id = pct.product_id
+      and merchant.id = pdt.merchant_id
+      and pct.type_id = 2
+      and odr.user_id = #{userId}
+      and odr.status = 1
+    --       判断订单付款状态
+      <if test="orderStatus != null and orderStatus != '' or orderStatus == 0">
+        and odr.order_status = #{orderStatus}
+      </if>
+--       判断订单物流状态
+      <if test="logisticsStatus != null and logisticsStatus != '' or logisticsStatus == 0">
+--       待收货
+        <if test="logisticsStatus == 1">
+--           and odr.logistics_status &lt;&gt; 4
+          and odr.logistics_status in (1,2,3)
+        </if>
+        <if test=" logisticsStatus != 1">
+          and odr.logistics_status = #{logisticsStatus}
+        </if>
+      </if>
+      <if test="keyword != null and keyword != ''">
+        and (odr.order_num like concat('%',#{keyword},'%') or pdt.detail_info like concat('%',#{keyword},'%'))
+      </if>
+  </select>
+  <!--购买过的店铺的结果映射-->
+  <resultMap id="SelectShopByBoughtResultMap" type="java.util.HashMap">
+    <id column="merchantId" jdbcType="INTEGER" property="merchantId"/>
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName" />
+    <result column="head_protrait" jdbcType="VARCHAR" property="headProtrait" />
+    <result column="pictureId" jdbcType="INTEGER" property="pictureId" />
+    <result column="pictureName" jdbcType="VARCHAR" property="pictureName" />
+    <result column="productId" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <select id="selectShopByBought" resultMap="SelectShopByBoughtResultMap">
+    select distinct
+                    merchant.id as merchantId ,merchant.shop_name,merchant.head_protrait, pct.id as pictureId, pct.`name` as pictureName, pdt.id as productId
+    from
+        order_info as odr,order_product_relation  as opr,product as pdt , merchant , picture as pct
+    where
+        odr.id = opr.order_id and  opr.product_id = pdt.id
+        and pdt.merchant_id = merchant.id and pct.product_id = pdt.id
+        and odr.user_id = #{userId} and odr.order_status = 1 and pct.type_id = 2;
+  </select>
+    <!--查询最大Id-->
+    <select id="selectMaxId" resultType="java.lang.Integer">
+    select max(id) from order_info;
+    </select>
+
+
+</mapper>

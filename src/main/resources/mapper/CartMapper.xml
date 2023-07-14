@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.CartMapper">
+  <resultMap id="CartResultMap" type="com.entity.Cart">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="time" jdbcType="DATE" property="time" />
+    <result column="num" jdbcType="INTEGER" property="num" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from cart
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <!--删除购物车记录-->
+  <delete id="deleteExist">
+    delete from cart where user_id = #{userId} and product_id = #{productId}
+  </delete>
+  <!--批量删除购物车记录-->
+  <delete id="deleteByIds">
+    delete from cart where id in
+    <foreach collection="ids" item="id" separator="," open="(" close=")" >
+      #{id}
+    </foreach>
+  </delete>
+  <insert id="insert" parameterType="com.entity.Cart">
+    insert into cart (id, time, num, user_id,
+      product_id)
+    values (#{id,jdbcType=INTEGER}, #{time,jdbcType=DATE}, #{num,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER},
+      #{productId,jdbcType=INTEGER})
+  </insert>
+  <!--插入购物车记录-->
+  <insert id="insertCart" parameterType="com.entity.Cart">
+    insert into cart (time, num, user_id, product_id, model)
+    values (#{time,jdbcType=DATE}, #{num,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER},
+            #{productId,jdbcType=INTEGER}, #{model,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Cart">
+    update cart
+    set time = #{time,jdbcType=DATE},
+      num = #{num,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=INTEGER},
+      product_id = #{productId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <!--修改商品数量-->
+  <update id="updateNum">
+    update cart set num = #{num} where user_id = #{userId} and product_id = #{productId}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="CartResultMap">
+    select id, time, num, user_id, product_id
+    from cart
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="CartResultMap">
+    select id, time, num, user_id, product_id
+    from cart
+  </select>
+  <!--购物车商品数量-->
+  <select id="selectCartNum" resultType="java.lang.Integer">
+    select count(*) as cartNum from cart where user_id = #{userId};
+  </select>
+  <resultMap id="SelectCartResultMap" type="java.util.HashMap">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="productId" jdbcType="INTEGER" property="productId"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+    <result column="inventory_num" jdbcType="DECIMAL" property="inventoryNum"/>
+    <result column="num" jdbcType="INTEGER" property="num"/>
+    <result column="pictureId" jdbcType="INTEGER" property="pictureId"/>
+    <result column="pictureName" jdbcType="VARCHAR" property="pictureName"/>
+    <result column="merchantId" jdbcType="INTEGER" property="merchantId"/>
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName"/>
+    <result column="model" jdbcType="VARCHAR" property="model"/>
+  </resultMap>
+  <!--查询购物车商品-->
+  <select id="selectCart" resultMap="SelectCartResultMap">
+    select
+           cart.id , cart.model, pdt.id as productId,pdt.detail_info, pdt.market_price, pdt.preferential_price,pdt.inventory_num,
+           cart.num, pct.id as pictureId, pct.`name` as pictureName, merchant.id as merchantId ,
+           merchant.shop_name
+    from
+         product as pdt, merchant , cart, picture as pct
+    where
+         pdt.id = cart.product_id and pdt.merchant_id = merchant.id and pct.type_id = 2
+         and pct.product_id = cart.product_id and cart.user_id = #{userId}
+  </select>
+
+
+</mapper>

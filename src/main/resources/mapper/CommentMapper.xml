@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.CommentMapper">
+  <resultMap id="CommentResultMap" type="com.entity.Comment">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+    <result column="time" jdbcType="TIMESTAMP" property="time" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="father_id" jdbcType="INTEGER" property="fatherId" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from comment
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <!--添加评论-->
+  <insert id="insert" parameterType="com.entity.Comment">
+    insert into comment ( content, time, user_id, product_id)
+    values (#{content,jdbcType=VARCHAR}, #{time,jdbcType=TIMESTAMP},
+       #{userId,jdbcType=INTEGER},#{productId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Comment">
+    update comment
+    set content = #{content,jdbcType=VARCHAR},
+      time = #{time,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=TINYINT},
+      father_id = #{fatherId,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=INTEGER},
+      product_id = #{productId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="CommentResultMap">
+    select id, content, time, status, father_id, user_id, product_id
+    from comment
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="CommentResultMap">
+    select id, content, time, status, father_id, user_id, product_id
+    from comment
+  </select>
+  <!--商品评论信息结果映射-->
+  <resultMap id="SelectByProductResultMap" type="java.util.HashMap">
+    <id column="commentID" jdbcType="INTEGER" property="commentId"/>
+    <result column="username" jdbcType="VARCHAR" property="username"/>
+    <result column="userID" jdbcType="INTEGER" property="userId"/>
+    <result column="model" jdbcType="VARCHAR" property="model"/>
+    <result column="content" jdbcType="VARCHAR" property="content"/>
+    <result column="time" jdbcType="TIMESTAMP" property="time"/>
+    <result column="head_portrait" jdbcType="VARCHAR" property="headPortrait"/>
+  </resultMap>
+  <!--商品评论信息-->
+  <select id="selectByProduct" resultMap="SelectByProductResultMap">
+    select distinct
+        user_info.id as userID, username, head_portrait,model, a.id as commentID, content, time
+    from
+        user_info ,order_info, (select id,content,time,user_id ,product_id from comment where product_id = #{productId}) a ,
+        (select order_id,model,product_id from order_product_relation where product_id = #{productId}) b
+    where
+        order_info.user_id = user_info.id and user_info.id = a.user_id
+        and a.product_id = b.product_id and b.order_id = order_info.id;
+  </select>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.AddressMapper">
+  <resultMap id="AddressResultMap" type="com.entity.Address">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="consignee" jdbcType="VARCHAR" property="consignee" />
+    <result column="region" jdbcType="VARCHAR" property="region" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="phone_num" jdbcType="CHAR" property="phoneNum" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from address
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <!--添加地址-->
+  <insert id="insert" parameterType="com.entity.Address">
+    insert into address ( consignee, region,
+      address, phone_num, user_id
+      )
+    values ( #{consignee,jdbcType=VARCHAR}, #{region,jdbcType=VARCHAR},
+      #{address,jdbcType=VARCHAR}, #{phoneNum,jdbcType=CHAR}, #{userId,jdbcType=INTEGER}
+      )
+  </insert>
+  <!--修改地址信息-->
+  <update id="updateByPrimaryKey" parameterType="com.entity.Address">
+    update address
+    set consignee = #{consignee,jdbcType=VARCHAR},
+      region = #{region,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      phone_num = #{phoneNum,jdbcType=CHAR},
+      user_id = #{userId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="AddressResultMap">
+    select id, consignee, region, address, phone_num, user_id
+    from address
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="AddressResultMap">
+    select id, consignee, region, address, phone_num, user_id
+    from address
+  </select>
+  <!--根据用户ID查询-->
+  <select id="selectByUserId" resultType="com.entity.Address">
+    select id, consignee, region, address, phone_num as phoneNum, user_id as userId
+    from address
+    where user_id = #{userId}
+  </select>
+</mapper>

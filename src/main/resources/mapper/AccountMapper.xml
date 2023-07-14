@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.AccountMapper">
+  <resultMap id="AccountResultMap" type="com.entity.Account">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="card_num" jdbcType="VARCHAR" property="cardNum" />
+    <result column="card_type" jdbcType="TINYINT" property="cardType" />
+    <result column="merchant_id" jdbcType="INTEGER" property="merchantId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from account
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.Account">
+    insert into account (id, card_num, card_type,
+      merchant_id)
+    values (#{id,jdbcType=INTEGER}, #{cardNum,jdbcType=VARCHAR}, #{cardType,jdbcType=TINYINT},
+      #{merchantId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Account">
+    update account
+    set card_num = #{cardNum,jdbcType=VARCHAR},
+      card_type = #{cardType,jdbcType=TINYINT},
+      merchant_id = #{merchantId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="AccountResultMap">
+    select id, card_num, card_type, merchant_id
+    from account
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="AccountResultMap">
+    select id, card_num, card_type, merchant_id
+    from account
+  </select>
+</mapper>

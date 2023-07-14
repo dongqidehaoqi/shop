@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.CollectionMapper">
+  <resultMap id="CollectionResultMap" type="com.entity.Collection">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="time" jdbcType="DATE" property="time" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from collection
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <!--根据用户ID和商品ID删除记录-->
+  <delete id="deleteByUserIdAndProductId">
+    delete from collection
+    where user_id = #{userId} and product_id = #{productId}
+  </delete>
+  <insert id="insert" parameterType="com.entity.Collection">
+    insert into collection (id, time, user_id, product_id)
+    values (#{id,jdbcType=INTEGER}, #{time,jdbcType=DATE}, #{userId,jdbcType=INTEGER},
+      #{productId,jdbcType=INTEGER})
+  </insert>
+  <!--添加收藏夹记录-->
+  <insert id="insertColl">
+    insert into collection (time, user_id, product_id)
+    values (#{time,jdbcType=DATE}, #{userId,jdbcType=INTEGER},
+            #{productId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.Collection">
+    update collection
+    set time = #{time,jdbcType=DATE},
+      user_id = #{userId,jdbcType=INTEGER},
+      product_id = #{productId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="CollectionResultMap">
+    select id, time, user_id, product_id
+    from collection
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="CollectionResultMap">
+    select id, time, user_id, product_id
+    from collection
+  </select>
+  <resultMap id="SelectCollectionResultMap" type="java.util.HashMap">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <id column="productId" jdbcType="INTEGER" property="productId"/>
+    <result column="pictureName" jdbcType="VARCHAR" property="pictureName"/>
+    <result column="detail_info" jdbcType="VARCHAR" property="detailInfo"/>
+    <result column="shop_name" jdbcType="VARCHAR" property="shopName"/>
+    <result column="merchantId" jdbcType="INTEGER" property="merchantId"/>
+    <result column="market_price" jdbcType="DECIMAL" property="marketPrice"/>
+    <result column="preferential_price" jdbcType="DECIMAL" property="preferentialPrice"/>
+  </resultMap>
+  <!--查询用户收藏夹-->
+  <select id="selectCollection" resultMap="SelectCollectionResultMap">
+    select distinct
+      coll.id, pdt.id as productId, pct.`name` as pictureName, pdt.detail_info, merchant.shop_name,
+      merchant.id as merchantId, pdt.market_price, pdt.preferential_price
+    from collection coll , product as pdt ,picture as pct , merchant
+    where
+      coll.product_id = pdt.id and pdt.id = pct.product_id
+      and pdt.merchant_id = merchant.id and pct.type_id = 2 and coll.user_id = #{userId}
+    <if test="pdtKeyword != null and pdtKeyword != ''">
+      and (merchant.shop_name like concat('%',#{pdtKeyword},'%') or pdt.detail_info like concat('%',#{pdtKeyword},'%'))
+    </if>
+  </select>
+  <!--根据用户id和商品id查询-->
+  <select id="selectByUserIdAndProductId" resultType="java.lang.Integer">
+    select id from collection where user_id = #{userId} and product_id = #{productId}
+  </select>
+
+
+</mapper>

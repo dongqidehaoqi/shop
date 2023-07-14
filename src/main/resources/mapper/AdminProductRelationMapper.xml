@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.AdminProductRelationMapper">
+  <resultMap id="AdminProductRelationResultMap" type="com.entity.AdminProductRelation">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="time" jdbcType="TIMESTAMP" property="time" />
+    <result column="method" jdbcType="TINYINT" property="method" />
+    <result column="result" jdbcType="TINYINT" property="result" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="admin_id" jdbcType="INTEGER" property="adminId" />
+    <result column="product_id" jdbcType="INTEGER" property="productId" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from admin_product_relation
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.entity.AdminProductRelation">
+    insert into admin_product_relation (id, time, method,
+      result, status, admin_id,
+      product_id)
+    values (#{id,jdbcType=INTEGER}, #{time,jdbcType=TIMESTAMP}, #{method,jdbcType=TINYINT},
+      #{result,jdbcType=TINYINT}, #{status,jdbcType=TINYINT}, #{adminId,jdbcType=INTEGER},
+      #{productId,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.entity.AdminProductRelation">
+    update admin_product_relation
+    set time = #{time,jdbcType=TIMESTAMP},
+      method = #{method,jdbcType=TINYINT},
+      result = #{result,jdbcType=TINYINT},
+      status = #{status,jdbcType=TINYINT},
+      admin_id = #{adminId,jdbcType=INTEGER},
+      product_id = #{productId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="AdminProductRelationResultMap">
+    select id, time, method, result, status, admin_id, product_id
+    from admin_product_relation
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="AdminProductRelationResultMap">
+    select id, time, method, result, status, admin_id, product_id
+    from admin_product_relation
+  </select>
+</mapper>
